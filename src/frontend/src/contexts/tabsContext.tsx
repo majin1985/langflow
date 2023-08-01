@@ -20,7 +20,7 @@ import {
 import { APIClassType, APITemplateType } from "../types/api";
 import { FlowType, NodeType } from "../types/flow";
 import { TabsContextType, TabsState } from "../types/tabs";
-import { updateIds, updateTemplate } from "../utils/reactflowUtils";
+import { addVersionToDuplicates, updateIds, updateTemplate } from "../utils/reactflowUtils";
 import { getRandomDescription, getRandomName } from "../utils/utils";
 import { alertContext } from "./alertContext";
 import { typesContext } from "./typesContext";
@@ -42,8 +42,6 @@ const TabsContextInitialValue: TabsContextType = {
   uploadFlow: () => {},
   hardReset: () => {},
   saveFlow: async (flow: FlowType) => {},
-  disableCopyPaste: false,
-  setDisableCopyPaste: (state: boolean) => {},
   lastCopiedSelection: null,
   setLastCopiedSelection: (selection: any) => {},
   tabsState: {},
@@ -450,6 +448,10 @@ export function TabsProvider({ children }: { children: ReactNode }) {
       processFlowEdges(newFlow);
       processFlowNodes(newFlow);
 
+      const flowName = addVersionToDuplicates(newFlow, flows);
+
+      newFlow.name = flowName;
+
       try {
         const { id } = await saveFlowToDatabase(newFlow);
         // Change the id to the new id.
@@ -585,16 +587,12 @@ export function TabsProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const [disableCopyPaste, setDisableCopyPaste] = useState(false);
-
   return (
     <TabsContext.Provider
       value={{
         saveFlow,
         lastCopiedSelection,
         setLastCopiedSelection,
-        disableCopyPaste,
-        setDisableCopyPaste,
         hardReset,
         tabId,
         setTabId,
